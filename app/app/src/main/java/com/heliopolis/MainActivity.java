@@ -107,6 +107,14 @@ public class MainActivity extends ActionBarActivity {
 
     }
 
+    public void startService(View view) {
+        startService(new Intent(this, MyService.class));
+    }
+
+    // Stop the service
+    public void stopService(View view) {
+        stopService(new Intent(this, MyService.class));
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
