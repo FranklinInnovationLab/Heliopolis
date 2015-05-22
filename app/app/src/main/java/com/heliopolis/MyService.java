@@ -113,9 +113,17 @@ public class MyService extends Service {
                 if (locationListener.longitude != null){
                     profile.addLocation(locationListener.longitude, locationListener.latitude, new Date());
                 }
-                System.out.println(profile);
             }
-        }, 0, 60, TimeUnit.SECONDS);
+        }, 0, 5, TimeUnit.SECONDS);
+
+        //this condenses data and sends it to server
+        ScheduledExecutorService server_scheduler =
+                Executors.newSingleThreadScheduledExecutor();
+        server_scheduler.scheduleAtFixedRate(new Runnable() {
+            public void run() {
+                profile.summarize();
+            }
+        }, 0, 30, TimeUnit.SECONDS);
     }
 
     @Override
