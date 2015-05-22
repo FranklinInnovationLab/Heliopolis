@@ -6,16 +6,18 @@ public class Profile {
     private String deviceId;
     private List<String> apps_installed;
     private Map<String, List<Date>> apps_usage;
+    private List locations;
 
     @Override
     public String toString(){
-        return this.deviceId + " " + apps_usage.toString();
+        return this.deviceId + " " + locations.toString();
     }
 
     public Profile(String deviceId){
         this.deviceId = deviceId;
         apps_installed = new ArrayList();
         apps_usage = new HashMap<String, List<Date>>();
+        locations = new ArrayList();
     }
 
     public void addAppInstalled(String app){
@@ -37,6 +39,14 @@ public class Profile {
         }
         times.add(time);
         apps_usage.put(app, times);
+    }
+
+    public void addLocation(String longitude, String latitude, Date time){
+        List curr = new ArrayList();
+        curr.add(longitude);
+        curr.add(latitude);
+        curr.add(time);
+        locations.add(curr);
     }
 
 }

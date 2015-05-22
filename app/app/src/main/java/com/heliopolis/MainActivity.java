@@ -42,40 +42,11 @@ import android.provider.Settings.Secure;
 
 public class MainActivity extends ActionBarActivity {
 
-    private class MyLocationListener implements LocationListener {
-        @Override
-        public void onLocationChanged(Location loc) {
-            String longitude = "Longitude: " +loc.getLongitude();
-            String latitude = "Latitude: " +loc.getLatitude();
-            System.out.println(longitude + latitude);
-        }
-
-        @Override
-        public void onProviderDisabled(String provider) {
-        }
-
-        @Override
-        public void onProviderEnabled(String provider) {
-        }
-
-        @Override
-        public void onStatusChanged(String provider,
-                                    int status, Bundle extras) {
-        }
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         startService(new Intent(this, MyService.class));
-
-
-        //get geolocation
-        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        LocationListener locationListener = new MyLocationListener();
-        locationManager.requestLocationUpdates(LocationManager
-                .GPS_PROVIDER, 5000, 10,locationListener);
 
     }
 
