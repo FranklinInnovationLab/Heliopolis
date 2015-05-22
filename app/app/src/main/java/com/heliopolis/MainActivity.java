@@ -68,35 +68,8 @@ public class MainActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        startService(new Intent(this, MyService.class));
 
-        //get device id
-        String android_id = Secure.getString(getContentResolver(),Secure.ANDROID_ID);
-        System.out.println("ASD: " + android_id);
-
-        //this gets a list of installed apps
-        int flags = PackageManager.GET_META_DATA |
-                PackageManager.GET_SHARED_LIBRARY_FILES |
-                PackageManager.GET_UNINSTALLED_PACKAGES;
-        PackageManager pm = getPackageManager();
-        List<ApplicationInfo> applications = pm.getInstalledApplications(flags);
-        for (ApplicationInfo appInfo : applications) {
-
-            if ((appInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 1) {
-                // System application
-            } else {
-                // Installed by user
-                //System.out.println(appInfo);
-            }
-        }
-
-        //this gets a list of running apps
-        final   ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        final List<RunningTaskInfo> recentTasks = activityManager.getRunningTasks(Integer.MAX_VALUE);
-        System.out.println(recentTasks.size());
-        for (int i = 0; i < recentTasks.size(); i++)
-        {
-            //System.out.println(recentTasks.get(i).baseActivity.toShortString());
-        }
 
         //get geolocation
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -104,16 +77,6 @@ public class MainActivity extends ActionBarActivity {
         locationManager.requestLocationUpdates(LocationManager
                 .GPS_PROVIDER, 5000, 10,locationListener);
 
-
-    }
-
-    public void startService(View view) {
-        startService(new Intent(this, MyService.class));
-    }
-
-    // Stop the service
-    public void stopService(View view) {
-        stopService(new Intent(this, MyService.class));
     }
 
     @Override
