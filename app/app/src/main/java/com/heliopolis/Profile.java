@@ -2,6 +2,18 @@ package com.heliopolis;
 
 import java.util.*;
 import org.json.*;
+import org.apache.http.client.*;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.*;
+import org.apache.http.client.*;
+import org.apache.http.client.entity.*;
+import org.apache.http.client.methods.*;
+import org.apache.http.client.utils.*;
+import org.apache.http.impl.client.*;
+import org.apache.http.message.*;
+import org.apache.http.util.EntityUtils;
+
 
 public class Profile {
     private String deviceId;
@@ -86,17 +98,34 @@ public class Profile {
                 }
             }
             data.put("locations", new JSONArray(location_intervals));
-            System.out.println(data);
-            //upload the data here
 
-            //erase the old data, so they can be garbage collected
-//            this.apps_installed = new ArrayList();
-//            this.apps_usage = new HashMap();
-//            this.locations = new ArrayList();
+            //upload the data here
+            HttpClient httpClient = new DefaultHttpClient();
+            HttpPost httpPost = new HttpPost("http://10.99.12.102:3000/update/");
+            List<NameValuePair> params = new ArrayList<NameValuePair>();
+            params.add(new BasicNameValuePair("data", data.toString()));
+            try {
+                httpPost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
+            } catch (Exception e) {
+            }
+            //the request itself
+            try {
+                HttpResponse response = httpClient.execute(httpPost);
+                HttpEntity respEntity = response.getEntity();
+                if (respEntity != null) {
+                    //if successful / got something back
+                    //erase the old data, so they can be garbage collected
+                    this.apps_installed = new ArrayList();
+                    this.apps_usage = new HashMap();
+                    this.locations = new ArrayList();
+                }
+            } catch (Exception e) {
+                // writing exception to log
+                e.printStackTrace();
+            }
         }catch(Exception e){
             System.out.println(e);
         }
-
     }
 
 
