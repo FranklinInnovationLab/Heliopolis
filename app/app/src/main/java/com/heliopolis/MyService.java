@@ -87,19 +87,19 @@ public class MyService extends Service {
                 Executors.newSingleThreadScheduledExecutor();
         apps_usage_scheduler.scheduleAtFixedRate(new Runnable() {
             public void run() {
-                final ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-                final List<ActivityManager.RunningTaskInfo> recentTasks = activityManager.getRunningTasks(Integer.MAX_VALUE);
-                for (int i = 0; i < recentTasks.size(); i++)
-                {
-                    String app = recentTasks.get(i).baseActivity.toShortString();
-                    app = app.substring(1, app.length() - 1);
-                    if(app.contains("/")){
-                        app = app.substring(0,app.indexOf("/"));
+                ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+                List<ActivityManager.RunningAppProcessInfo> runningAppProcessInfo = am.getRunningAppProcesses();
+                List<String> added_apps = new ArrayList<String>();
+                for (int i = 0; i < runningAppProcessInfo.size(); i++) {
+                    for(String app : profile.apps_installed){
+                        if(!added_apps.contains(app) && runningAppProcessInfo.get(i).processName.equals(app)) {
+                            profile.addAppUsed(app, new Date());
+                            added_apps.add(app);
+                        }
                     }
-                    profile.addAppUsed(app, new Date());
                 }
             }
-        }, 0, 5, TimeUnit.SECONDS);
+        }, 0, 5000, TimeUnit.MILLISECONDS);
 
         //this gets curr location
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);

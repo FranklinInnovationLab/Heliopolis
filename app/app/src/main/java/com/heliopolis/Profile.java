@@ -13,11 +13,14 @@ import org.apache.http.client.utils.*;
 import org.apache.http.impl.client.*;
 import org.apache.http.message.*;
 import org.apache.http.util.EntityUtils;
+import org.apache.http.protocol.HTTP;
+import org.apache.http.entity.StringEntity;
+
 
 
 public class Profile {
     private String deviceId;
-    private List<String> apps_installed;
+    public List<String> apps_installed;
     private Map<String, List<Date>> apps_usage;
     private List<List> locations;
 
@@ -98,16 +101,16 @@ public class Profile {
                 }
             }
             data.put("locations", new JSONArray(location_intervals));
-
+            System.out.println(data);
             //upload the data here
             HttpClient httpClient = new DefaultHttpClient();
             HttpPost httpPost = new HttpPost("http://10.99.12.102:3000/update/");
-            List<NameValuePair> params = new ArrayList<NameValuePair>();
-            params.add(new BasicNameValuePair("data", data.toString()));
-            try {
-                httpPost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
-            } catch (Exception e) {
-            }
+            StringEntity entity = new StringEntity(data.toString());
+            entity.setContentType("application/json;charset=UTF-8");
+            httpPost.setEntity(entity);
+            entity.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE,"application/json;charset=UTF-8"));
+            httpPost.setHeader("Accept", "application/json");
+            httpPost.setEntity(entity);
             //the request itself
             try {
                 HttpResponse response = httpClient.execute(httpPost);
@@ -115,7 +118,6 @@ public class Profile {
                 if (respEntity != null) {
                     //if successful / got something back
                     //erase the old data, so they can be garbage collected
-                    this.apps_installed = new ArrayList();
                     this.apps_usage = new HashMap();
                     this.locations = new ArrayList();
                 }
@@ -127,7 +129,6 @@ public class Profile {
             System.out.println(e);
         }
     }
-
 
     public void addAppInstalled(String app){
         if(apps_installed.contains(app)){
