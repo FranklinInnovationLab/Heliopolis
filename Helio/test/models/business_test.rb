@@ -1,16 +1,19 @@
 # == Schema Information
 #
-# Table name: users
+# Table name: businesses
 #
 #  id         :integer          not null, primary key
-#  unique_id  :string
+#  name       :string
+#  address    :text
+#  latitude   :string
+#  longtitude :string
 #  created_at :datetime         not null
 #  updated_at :datetime         not null
 #
 
 require 'test_helper'
 
-class UserTest < ActiveSupport::TestCase
+class BusinessTest < ActiveSupport::TestCase
   # test "the truth" do
   #   assert true
   # end

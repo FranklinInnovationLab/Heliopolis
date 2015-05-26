@@ -1,4 +1,9 @@
 Rails.application.routes.draw do
+
+  resources :subscriptions
+
+  resources :businesses
+
   post '/update/' => 'application#update'
   get '/packages/' => 'application#dump_packages'
   get '/users/' => 'application#dump_users'
