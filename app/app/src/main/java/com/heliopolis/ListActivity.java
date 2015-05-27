@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.os.StrictMode;
+import android.provider.Settings;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -31,71 +33,49 @@ import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicHeader;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.protocol.HTTP;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
-public class ListActivity extends ActionBarActivity {
-    private CallbackManager callbackManager;
 
+public class ListActivity extends ActionBarActivity {
+    private LoginManager loginManager;
     BusinessAdapter dataAdapter = null;
+
+    public void enableStrictMode()
+    {
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //facebook stuff
-        FacebookSdk.sdkInitialize(this.getApplicationContext());
-        callbackManager = CallbackManager.Factory.create();
-        LoginManager.getInstance().logInWithReadPermissions(this, Arrays.asList("email", "public_profile", "user_friends", "user_birthday"));
-        LoginManager.getInstance().registerCallback(callbackManager,
-                new FacebookCallback<LoginResult>() {
-                    @Override
-                    public void onSuccess(LoginResult loginResult) {
-                        // App code
-                        System.out.println("123");
-                        System.out.println(loginResult.getAccessToken());
-                        System.out.println(loginResult.getRecentlyDeniedPermissions());
-                        System.out.println(loginResult.getRecentlyGrantedPermissions());
-
-                        GraphRequest request = GraphRequest.newMeRequest(
-                                loginResult.getAccessToken(),
-                                new GraphRequest.GraphJSONObjectCallback() {
-                                    @Override
-                                    public void onCompleted(
-                                            JSONObject object,
-                                            GraphResponse response) {
-                                        // Application code
-                                        Log.v("LoginActivity", response.toString());
-                                    }
-                                });
-                        Bundle parameters = new Bundle();
-                        parameters.putString("fields", "id, name, email, gender, birthday");
-                        request.setParameters(parameters);
-                        request.executeAsync();
-                    }
-
-                    @Override
-                    public void onCancel() {
-                        // App code
-                    }
-
-                    @Override
-                    public void onError(FacebookException exception) {
-                        // App code
-                    }
-                });
-
+        startService(new Intent(this, MyService.class));
+        loginManager = LoginManager.getInstance();
         setContentView(R.layout.activity_list);
         displayListView();
     }
 
-    @Override
-    protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        callbackManager.onActivityResult(requestCode, resultCode, data);
-    }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -112,7 +92,10 @@ public class ListActivity extends ActionBarActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_logout) {
+            loginManager.logOut();
+            Intent i = new Intent(getApplicationContext(), MainActivity.class);
+            startActivity(i);
             return true;
         }
 
@@ -120,20 +103,39 @@ public class ListActivity extends ActionBarActivity {
     }
 
     private void displayListView() {
-
-        //Array list of countries
+        //queries server to get businesses and subscription
+        enableStrictMode();
         ArrayList<Business> businessList = new ArrayList<>();
-        Business b = new Business();
-        b.businessName = "Shit";
-        b.checkedIn = true;
-        businessList.add(b);
+        HttpClient client = new DefaultHttpClient();
+        String device_id = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
+        HttpGet request = new HttpGet("http://5eef8957.ngrok.io/businesses?device_id=" + device_id);
+        HttpResponse response = null;
+        try {
+            response = client.execute(request);
+            BufferedReader rd = new BufferedReader
+                    (new InputStreamReader(response.getEntity().getContent()));
+            StringBuilder stringBuilder = new StringBuilder();
+            String line = "";
+            while ((line = rd.readLine()) != null) {
+                stringBuilder.append(line);
+            }
+            line = stringBuilder.toString();
+            JSONArray jsonArr = new JSONArray(line);
 
-        b = new Business();
-        b.businessName = "Shit";
-        b.checkedIn = true;
+            for (int i = 0 ; i < jsonArr.length(); i++) {
+                JSONObject obj = jsonArr.getJSONObject(i);
+                String name = (String)obj.get("name");
+                int id = (int)obj.get("id");
+                boolean subscribed = (boolean)obj.get("subscribed");
+                Business b = new Business(id, name, subscribed);
+                businessList.add(b);
+            }
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
 
         ListView listView = (ListView) findViewById(R.id.listView);
-        businessList.add(b);
         dataAdapter = new BusinessAdapter(this, R.layout.business_layout, businessList);
         listView.setAdapter(dataAdapter);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -182,13 +184,39 @@ public class ListActivity extends ActionBarActivity {
 
                 holder.checkedIn.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View v) {
-                        CheckBox cb = (CheckBox) v;
-                        Business business = (Business) cb.getTag();
-                        Toast.makeText(getApplicationContext(),
-                                "Clicked on Checkbox: " + business.businessName +
-                                        " is " + cb.isChecked(),
-                                Toast.LENGTH_LONG).show();
+                        final CheckBox cb = (CheckBox) v;
+                        final Business business = (Business) cb.getTag();
                         business.checkedIn = cb.isChecked();
+                        final String business_id = Integer.toString(business.business_id);
+                        final String device_id = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
+                        //post request to server
+                        new Thread(new Runnable() {
+                            public void run() {
+                                HttpClient httpClient = new DefaultHttpClient();
+                                HttpPost httpPost = new HttpPost("http://5eef8957.ngrok.io/subscriptions/update");
+                                ArrayList<NameValuePair> postParameters;
+                                postParameters = new ArrayList<NameValuePair>();
+                                postParameters.add(new BasicNameValuePair("business_id", business_id));
+                                postParameters.add(new BasicNameValuePair("device_id", device_id));
+                                try{
+                                    httpPost.setEntity(new UrlEncodedFormEntity(postParameters));
+                                } catch (Exception e){
+                                    e.printStackTrace();
+                                }
+                                //the request itself
+                                try {
+                                    HttpResponse response = httpClient.execute(httpPost);
+                                    HttpEntity respEntity = response.getEntity();
+                                    if (respEntity != null) {
+                                        System.out.println("updated checkbox");
+                                    }
+                                } catch (Exception e) {
+                                    // writing exception to log
+                                    e.printStackTrace();
+                                }
+
+                            }
+                        }).start();
                     }
                 });
             } else {

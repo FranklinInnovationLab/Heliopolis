@@ -10,7 +10,9 @@ Rails.application.routes.draw do
   get '/locations/' => 'application#dump_locations'
   get '/package_times/' => 'application#dump_package_times'
   get '/trends/' => 'businesses#show'
-  
+  get '/businesses' => 'businesses#index'
+  post '/subscriptions/create' => 'subscriptions#create'
+  post '/subscriptions/update' => 'subscriptions#toggle'
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".
 

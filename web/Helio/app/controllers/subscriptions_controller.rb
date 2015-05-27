@@ -23,31 +23,25 @@ class SubscriptionsController < ApplicationController
 
   # POST /subscriptions
   # POST /subscriptions.json
-  def create
-    @subscription = Subscription.new(subscription_params)
-
-    respond_to do |format|
-      if @subscription.save
-        format.html { redirect_to @subscription, notice: 'Subscription was successfully created.' }
-        format.json { render :show, status: :created, location: @subscription }
-      else
-        format.html { render :new }
-        format.json { render json: @subscription.errors, status: :unprocessable_entity }
-      end
+  # 127.0.0.1:3000/subscriptions/update
+  def toggle
+    # put user_id business_id in params
+    user = User.where(:unique_id => params[:device_id])
+    if user.empty?
+      user = User.new(:unique_id => params[:device_id])
+      user.save
+    else
+      user = user.first #WHERE RETURNS AN ARRAY
     end
-  end
-
-  # PATCH/PUT /subscriptions/1
-  # PATCH/PUT /subscriptions/1.json
-  def update
-    respond_to do |format|
-      if @subscription.update(subscription_params)
-        format.html { redirect_to @subscription, notice: 'Subscription was successfully updated.' }
-        format.json { render :show, status: :ok, location: @subscription }
-      else
-        format.html { render :edit }
-        format.json { render json: @subscription.errors, status: :unprocessable_entity }
-      end
+    user_id = user.id
+    @subscription = Subscription.where(:business_id => params[:business_id], :user_id => user_id)
+    if @subscription.empty?
+      @subscription = Subscription.new(:business_id => params[:business_id], :user_id => user_id)
+      @subscription.save
+      render :json => "subscribed"
+    else
+      @subscription.first.destroy
+      render :json => "unsubscribed"
     end
   end
 
@@ -61,14 +55,7 @@ class SubscriptionsController < ApplicationController
     end
   end
 
-  private
-    # Use callbacks to share common setup or constraints between actions.
-    def set_subscription
-      @subscription = Subscription.find(params[:id])
-    end
-
-    # Never trust parameters from the scary internet, only allow the white list through.
-    def subscription_params
-      params.require(:subscription).permit(:user_id, :business_id, :check_in_count)
-    end
+  def subscription_params
+    params.permit(:user_id, :business_id)
+  end
 end

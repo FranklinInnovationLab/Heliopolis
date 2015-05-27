@@ -4,7 +4,24 @@ class BusinessesController < ApplicationController
   # GET /businesses
   # GET /businesses.json
   def index
-    @businesses = Business.all
+    businesses = Business.all
+    result = []
+    user = User.where(:unique_id => params[:device_id])
+    if user.empty?
+      user = User.new(:unique_id => params[:device_id])
+      user.save
+    else
+      user = user.first
+    end
+    user_id = user.id
+    businesses.each do |business|
+      subscribed = true
+      if Subscription.where(:user_id => user_id, :business_id => business.id).empty?
+        subscribed = false
+      end
+      result.push({:name => business.name, :id => business.id, :subscribed => subscribed })
+    end
+    render :json => result
   end
 
   # GET /businesses/1
@@ -91,11 +108,11 @@ class BusinessesController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_business
-      @business = Business.find(params[:id])
+      # @business = Business.find(params[:id])
     end
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def business_params
-      params.require(:business).permit(:name, :address, :latitude, :longtitude)
+      # params.require(:business).permit(:name, :address, :latitude, :longtitude)
     end
 end

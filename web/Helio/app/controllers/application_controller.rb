@@ -66,7 +66,7 @@ class ApplicationController < ActionController::Base
     
     def process_intervals(package, intervals)
         intervals.each do |interval|
-            PackageTime.create(:package => package, :start_time => interval.first, :end_time => interval.last, :user => @current_user)
+            PackageTime.create(:package => package, :start_time => interval.first, :end_time => interval.last, :date => @current_user)
         end
     end
     
