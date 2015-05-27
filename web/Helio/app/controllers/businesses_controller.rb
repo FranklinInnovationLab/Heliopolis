@@ -9,7 +9,34 @@ class BusinessesController < ApplicationController
 
   # GET /businesses/1
   # GET /businesses/1.json
+  # http://127.0.0.1:3000/trends?id=1
   def show
+    # most common installed apps
+    installed_packages = Hash.new
+    Package.all.each do |package_obj|
+      if installed_packages[package_obj.package_name]
+        installed_packages[package_obj.package_name] += 1
+      else
+        installed_packages[package_obj.package_name] = 1
+      end
+    end
+    installed_packages = installed_packages.sort_by {|_key, value| -value}
+
+    # most used app by run time
+    used_packages = Hash.new
+    PackageTime.all.each do |package_obj|
+      package_name = Package.where(:package_name => package_obj.package_name, :user_id => package_obj.user_id)
+      diff = ((package_obj.end_time - package_obj.start_time) * 24 * 60 * 60).to_i
+      if used_packages[package_name]
+        used_packages[package_name] += diff
+      else
+        used_packages[package_name] = diff
+      end
+    end
+    used_packages = used_packages.sort_by {|_key, value| -value}
+
+
+    render :json => "not updated"
   end
 
   # GET /businesses/new

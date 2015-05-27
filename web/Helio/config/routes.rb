@@ -9,6 +9,7 @@ Rails.application.routes.draw do
   get '/users/' => 'application#dump_users'
   get '/locations/' => 'application#dump_locations'
   get '/package_times/' => 'application#dump_package_times'
+  get '/trends/' => 'businesses#show'
   
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".
