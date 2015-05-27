@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import com.facebook.FacebookSdk;
 
 
 public class MainActivity extends Activity {
@@ -13,10 +14,11 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        //creates background data miner
         startService(new Intent(this, MyService.class));
+        //starts 1st activity
         Intent i = new Intent(getApplicationContext(), ListActivity.class);
         startActivity(i);
-
     }
 
     @Override
