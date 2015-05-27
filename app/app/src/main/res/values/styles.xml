@@ -5,7 +5,7 @@
         <item name="colorPrimary">#26C6DA</item>
         <item name="colorPrimaryDark">#0097A7</item>
         <item name="colorAccent">#80CBC4</item>
-        <item name="secondaryTextColor">#0097A7</item>
+        <item name="android:textColorSecondary">#0097A7</item>
     </style>
 
 </resources>
