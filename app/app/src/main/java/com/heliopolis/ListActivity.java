@@ -3,35 +3,22 @@ package com.heliopolis;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.provider.Settings;
 import android.support.v7.app.ActionBarActivity;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.facebook.CallbackManager;
-import com.facebook.FacebookCallback;
-import com.facebook.FacebookException;
-import com.facebook.FacebookSdk;
-import com.facebook.GraphRequest;
-import com.facebook.GraphResponse;
 import com.facebook.login.LoginManager;
-import com.facebook.login.LoginResult;
-import com.facebook.login.widget.LoginButton;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -40,28 +27,21 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.protocol.HTTP;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
 
 
 public class ListActivity extends ActionBarActivity {
     private LoginManager loginManager;
     BusinessAdapter dataAdapter = null;
 
-    public void enableStrictMode()
-    {
+    public void enableStrictMode() {
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
     }
@@ -74,8 +54,6 @@ public class ListActivity extends ActionBarActivity {
         setContentView(R.layout.activity_list);
         displayListView();
     }
-
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -109,7 +87,7 @@ public class ListActivity extends ActionBarActivity {
         HttpClient client = new DefaultHttpClient();
         String device_id = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
         HttpGet request = new HttpGet("http://5eef8957.ngrok.io/businesses?device_id=" + device_id);
-        HttpResponse response = null;
+        HttpResponse response;
         try {
             response = client.execute(request);
             BufferedReader rd = new BufferedReader
@@ -141,9 +119,6 @@ public class ListActivity extends ActionBarActivity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View view,
                                     int position, long id) {
-                Toast.makeText(getApplicationContext(),
-                        "Clicked on Row: ",
-                        Toast.LENGTH_LONG).show();
             }
         });
 
@@ -184,42 +159,38 @@ public class ListActivity extends ActionBarActivity {
 
                 holder.checkedIn.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View v) {
-                        final CheckBox cb = (CheckBox) v;
-                        final Business business = (Business) cb.getTag();
-                        business.checkedIn = cb.isChecked();
-                        final String business_id = Integer.toString(business.business_id);
-                        final String device_id = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
-                        //post request to server
-                        new Thread(new Runnable() {
-                            public void run() {
-                                HttpClient httpClient = new DefaultHttpClient();
-                                HttpPost httpPost = new HttpPost("http://5eef8957.ngrok.io/subscriptions/update");
-                                ArrayList<NameValuePair> postParameters;
-                                postParameters = new ArrayList<NameValuePair>();
-                                postParameters.add(new BasicNameValuePair("business_id", business_id));
-                                postParameters.add(new BasicNameValuePair("device_id", device_id));
-                                try{
-                                    httpPost.setEntity(new UrlEncodedFormEntity(postParameters));
-                                } catch (Exception e){
-                                    e.printStackTrace();
-                                }
-                                //the request itself
-                                try {
-                                    HttpResponse response = httpClient.execute(httpPost);
-                                    HttpEntity respEntity = response.getEntity();
-                                    if (respEntity != null) {
-                                        System.out.println("updated checkbox");
-                                    }
-                                } catch (Exception e) {
-                                    // writing exception to log
-                                    e.printStackTrace();
-                                }
-
+                    final CheckBox cb = (CheckBox) v;
+                    final Business business = (Business) cb.getTag();
+                    business.checkedIn = cb.isChecked();
+                    final String business_id = Integer.toString(business.business_id);
+                    final String device_id = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
+                    new Thread(new Runnable() {
+                        public void run() {
+                        HttpClient httpClient = new DefaultHttpClient();
+                        HttpPost httpPost = new HttpPost("http://5eef8957.ngrok.io/subscriptions/update");
+                        ArrayList<NameValuePair> postParameters;
+                        postParameters = new ArrayList<NameValuePair>();
+                        postParameters.add(new BasicNameValuePair("business_id", business_id));
+                        postParameters.add(new BasicNameValuePair("device_id", device_id));
+                        try{
+                            httpPost.setEntity(new UrlEncodedFormEntity(postParameters));
+                        }
+                        catch (Exception e) {
+                        }
+                        try {
+                            HttpResponse response = httpClient.execute(httpPost);
+                            HttpEntity respEntity = response.getEntity();
+                            if (respEntity != null) {
                             }
-                        }).start();
+                        }
+                        catch (Exception e) {
+                        }
+                        }
+                    }).start();
                     }
                 });
-            } else {
+            }
+            else {
                 holder = (ViewHolder) businessView.getTag();
             }
             Business business = businessList.get(position);

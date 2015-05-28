@@ -1,1 +1,1 @@
-include ':app', ':facebook'
+include ':app', ':facebook', ':calligraphy-2.1.0'

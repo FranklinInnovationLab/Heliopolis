@@ -1,9 +1,9 @@
 package com.heliopolis;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -20,6 +20,9 @@ import org.json.JSONObject;
 
 import java.util.Arrays;
 
+import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
+import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
+
 
 public class MainActivity extends Activity {
     private CallbackManager callbackManager;
@@ -29,49 +32,51 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         FacebookSdk.sdkInitialize(this.getApplicationContext());
+        CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()
+                        .setFontAttrId(R.attr.fontPath)
+                        .build()
+        );
         setContentView(R.layout.activity_main);
 
         callbackManager = CallbackManager.Factory.create();
         loginManager = LoginManager.getInstance();
 
-        loginManager.logInWithReadPermissions(this, Arrays.asList("public_profile"));
+        // loginManager.logInWithReadPermissions(this, Arrays.asList("public_profile"));
         loginManager.registerCallback(callbackManager,
-                new FacebookCallback<LoginResult>() {
-                    @Override
-                    public void onSuccess(LoginResult loginResult) {
+            new FacebookCallback<LoginResult>() {
+                @Override
+                public void onSuccess(LoginResult loginResult) {
 
-                        GraphRequest request = GraphRequest.newMeRequest(
-                                loginResult.getAccessToken(),
-                                new GraphRequest.GraphJSONObjectCallback() {
-                                    @Override
-                                    public void onCompleted(
-                                            JSONObject object,
-                                            GraphResponse response) {
-                                        // Application code
-                                        Log.v("LoginActivity", response.toString());
-                                        Intent i = new Intent(getApplicationContext(), ListActivity.class);
-                                        startActivity(i);
-                                    }
-                                });
-                        Bundle parameters = new Bundle();
-                        parameters.putString("fields", "id, name, email, gender, birthday");
-                        request.setParameters(parameters);
-                        request.executeAsync();
-                    }
+                    GraphRequest request = GraphRequest.newMeRequest(
+                            loginResult.getAccessToken(),
+                            new GraphRequest.GraphJSONObjectCallback() {
+                                @Override
+                                public void onCompleted(
+                                        JSONObject object,
+                                        GraphResponse response) {
+                                    Intent i = new Intent(getApplicationContext(), ListActivity.class);
+                                    startActivity(i);
+                                }
+                            });
+                    Bundle parameters = new Bundle();
+                    parameters.putString("fields", "id, name, email, gender, birthday");
+                    request.setParameters(parameters);
+                    request.executeAsync();
+                }
 
-                    @Override
-                    public void onCancel() {
-                        // App code
-                    }
+                @Override
+                public void onCancel() {
+                }
 
-                    @Override
-                    public void onError(FacebookException exception) {
-                        // App code
-                    }
-                });
+                @Override
+                public void onError(FacebookException exception) {
+                }
+            });
+    }
 
-        //starts 1st activity
-
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
     }
 
     @Override
@@ -82,23 +87,11 @@ public class MainActivity extends Activity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_logout) {
-            return true;
-        }
-
         return super.onOptionsItemSelected(item);
     }
 }
